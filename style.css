@@ -1,0 +1,52 @@
+body {
+    /* background-color: rgb(206, 219, 219); */
+    text-align: center;
+}
+
+#apower {
+    border: 1px inset rgb(9, 9, 53);
+    position: relative;
+    margin: 0 auto;
+    max-width: 50%;
+    text-align: center;
+}
+
+#consumption {
+  border: 1px inset rgb(9, 9, 53);
+  position: absolute;
+  margin: 0 auto;
+  max-width: 20%;
+}
+
+#consumption_aggregate {
+  border: 1px inset rgb(9, 9, 53);
+  position: relative;
+  margin: 0 auto;
+  max-width: 50%;
+}
+
+
+/* canvas */
+/* #ciao {
+    border: 2px inset red;
+} */
+button {
+    background-color: #d7182e; 
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    border-radius: 7px;
+  }
+
+
+.input-group {
+  width: 300px;
+  position: relative;
+  margin: 0 auto;
+  text-align: center;
+}
+

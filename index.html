@@ -1,0 +1,142 @@
+<!doctype html>
+<html ng-app="myApp">
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.0/angular.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment-with-locales.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
+    <script type="text/javascript" src="module/angular-chart.min.js"></script>
+    <script src="module/angular-moment-picker/dist/angular-moment-picker.min.js"></script>
+    <script src="module/chartjs-plugin-doughnutlabel.min.js"></script>
+
+    <link href="lib/angular-moment-picker/dist/angular-moment-picker.min.css" rel="stylesheet">
+
+    <link href="bootstrap/css/bootstrap.css" rel="stylesheet">
+    <script src="bootstrap/js/bootstrap.bundle.js"></script>
+    <link rel="icon" type="image/x-icon" href="img/favicon32.png">
+    <script src="controller.js"></script>
+    <title>eCare - EM</title>
+</head>
+
+<body ng-controller="webapp_controller" data-bs-theme={{theme}}>
+    <div class="container">
+        <nav class="navbar navbar-expand-lg bg-body-tertiary">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <img src="img/ecare_logo_{{theme=='dark' ? 'white' : 'dark'}}.svg" alt="ecare" height="36">
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent" style="padding-top: 20px;">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <select filter="true" ng-if="logged" class="form-select" ng-model="selectedHost"
+                                ng-change="getItemList(selectedHost)"
+                                ng-options="host.hostid as host.host for host in hostList">
+                                <option disabled selected value> -- Seleziona Shelly -- </option>
+                            </select>
+                        </li>
+
+                        <li ng-if="logged" class="nav-item">
+                            <div class="input-group mb-3" moment-picker="viewStart" format="DD/MM/yyyy HH:mm"
+                                locale="it" min-view="month" max-view="hour" today="true" hours-start="0" hours-end="23"
+                                minutes-start="0" minutes-end="59" change="onChangeStart(newValue,oldValue)">
+
+                                <span class="input-group-addon">
+                                    <i class="octicon octicon-calendar"></i>
+                                </span>
+
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="basic-addon1">Data Inizio</span>
+                                </div>
+
+                                <input class="form-control" aria-describedby="basic-addon1" ng-model="viewStart"
+                                    ng-model-options="{ updateOn: 'blur' }">
+                            </div>
+                        </li>
+
+                        <li ng-if="logged" class="nav-item">
+                            <div class="input-group mb-3" moment-picker="viewEnd" format="DD/MM/yyyy HH:mm" locale="it"
+                                min-view="month" max-view="hour" today="true" hours-start="0" hours-end="23"
+                                minutes-start="0" minutes-end="59" change="onChangeEnd(newValue,oldValue)">
+
+                                <span class="input-group-addon">
+                                    <i class="octicon octicon-calendar"></i>
+                                </span>
+
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="basic-addon1">Data Fine</span>
+                                </div>
+
+                                <input class="form-control" ng-model="viewEnd" ng-model-options="{ updateOn: 'blur' }">
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <div>
+                                <button class="btn btn-outline-primary" ng-if='!logged'
+                                    ng-click="login()">Login</button>
+                                <button class="btn btn-outline-secondary" ng-if='logged'
+                                    ng-click="logout()">Logout</button>
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <!-- <button class="btn" ng-click="theme = (theme=='dark' ? 'white' : 'dark')"><img width="30px" src="img/theme_button_{{theme=='dark' ? 'white' : 'dark'}}.png"/></button> -->
+                            <button class="btn" ng-click="changeTheme()"><img width="30px"
+                                    src="img/theme_button_dark.png" /></button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <div ng-if="logged && consumption_id && !reload">
+            <div class="row justify-content-center">
+                <div class="col">
+                    <canvas style="position: relative; max-height:55vh; max-width:100vw" ng-if="apower_ids.length > 0"
+                        id="apower" class="chart chart-line" chart-data="apower_data" chart-labels="apower_labels"
+                        chart-options="options" chart-click="onClick" chart-series="apower_series"
+                        chart-dataset-override="datasetOverride"></canvas>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <canvas ng-if="!(consumption_id === undefined)" id="consumption" class="chart chart-doughnut"
+                        chart-data="consumption_data" chart-labels="consumption_labels" chart-options="{
+                        legend: {
+                            display: true
+                        },
+                        plugins: {
+                            doughnutlabel: {
+                                labels: [
+                                {
+                                    text: consumption_data_tot,
+                                    font: {
+                                    size: '60'
+                                    }
+                                }
+                                ]
+                            }
+                        }		
+                    }" chart-click="onClick">
+                    </canvas>
+                </div>
+                <div class="col">
+                    <canvas ng-if="!(consumption_havg_id === undefined)" id="apower" class="chart chart-bar"
+                        chart-data="[history[consumption_havg_id].data]"
+                        chart-labels="history[consumption_havg_id].clock" chart-options="options" chart-click="onClick"
+                        chart-series="['Shelly: Energy Consumption']"></canvas>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+</html>
